@@ -2,10 +2,14 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
+use std::mem::replace;
+
+
+
 
 pub struct Heap<T>
 where
@@ -23,7 +27,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: Vec::new(),
             comparator,
         }
     }
@@ -38,18 +42,26 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count+=1;
+        let mut ind=self.count-1;
+        while ind!=0&&(self.comparator)(&self.items[ind],&self.items[self.parent_idx(ind)]){
+            self.swap(ind,self.parent_idx(ind));
+            ind=self.parent_idx(ind);
+        }
+
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
-        idx / 2
+        (idx-1) / 2
     }
 
     fn children_present(&self, idx: usize) -> bool {
-        self.left_child_idx(idx) <= self.count
+        self.left_child_idx(idx) < self.count
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
-        idx * 2
+        idx * 2+1
     }
 
     fn right_child_idx(&self, idx: usize) -> usize {
@@ -57,9 +69,48 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);  
+        let right = self.right_child_idx(idx);  
+        if left >= self.count {  
+            return idx; 
+        }  
+        let smallest = if right >= self.count {  
+            left  
+        } else {  
+            if (self.comparator)(&self.items[left], &self.items[right]) {  
+                left  
+            } else {  
+                right  
+            }  
+        };  
+        if (self.comparator)(&self.items[idx], &self.items[smallest]) {  
+            idx  
+        } else {  
+            smallest  
+        }  
     }
+
+    fn heapify_down(&mut self, idx: usize) {  
+
+        let smallest = self.smallest_child_idx(idx);  
+
+        if smallest != idx {  
+
+            self.swap(idx, smallest);  
+
+            self.heapify_down(smallest);  
+
+        }  
+
+    }  
+
+  
+
+    fn swap(&mut self, i: usize, j: usize) {  
+
+        self.items.swap(i, j);  
+
+    } 
 }
 
 impl<T> Heap<T>
@@ -77,16 +128,40 @@ where
     }
 }
 
-impl<T> Iterator for Heap<T>
-where
-    T: Default,
-{
-    type Item = T;
+impl<T> Iterator for Heap<T>  
 
-    fn next(&mut self) -> Option<T> {
-        //TODO
-		None
-    }
+where  
+
+T: Ord + Copy+ std::default::Default
+
+
+
+{  
+
+    type Item = T;  
+
+  
+
+    fn next(&mut self) -> Option<T> {  
+
+        if self.is_empty() {  
+
+            return None;  
+
+        }  
+
+        let last_index = self.count as usize - 1;  
+
+        self.items.swap(0, last_index);  
+
+        self.count -= 1;  
+
+        self.heapify_down(0);  
+
+        Some(self.items.pop().unwrap())  
+
+    }  
+
 }
 
 pub struct MinHeap;
